@@ -79,31 +79,38 @@ def read_arduino_data():
                 # Check if data is available to read
                 if arduino.in_waiting > 0:
                     line = arduino.readline().decode('utf-8', errors='ignore').strip()
-                    print(f"📥 Raw Serial Data: '{line}'")  # Debug: Log all raw Serial data
+                    print(f"📥 Raw Serial Data: '{line}'")
 
-                    if line and line.startswith("Letter: \""):
-                        state = line[len("Letter: \""):-1]
+                    if "Letter:" in line:
+                        try:
+                            state = line.split('"')[1]
+                        except:
+                            print("⚠ Could not parse final letter")
+                            continue
+
                         print(f"📡 Plastic Status Received: {state}")
 
-                        # Update AUV state based on the received state
-                        if state in ['y', 'w', 'n']:
+                        if state in ['y','w','n']:
+                            last_state = state
+                            new_data_received = True
+
                             if state == 'y':
                                 auv_state["plastic_detected"] = True
                                 auv_state["fishes_detected"] = 0
                             elif state == 'w':
                                 auv_state["plastic_detected"] = True
                                 auv_state["fishes_detected"] = 1
-                            elif state == 'n':
+                            else:
                                 auv_state["plastic_detected"] = False
                                 auv_state["fishes_detected"] = 0
 
-                            last_state = state
-                            new_data_received = True  # Set flag to indicate new data
                             socketio.emit("auv_update", auv_state)
                         else:
-                            print(f"⚠ Unknown state received: {state}")
+                            print(f"⚠ Invalid state parsed: {state}")
+
                     else:
                         print(f"⚠ Non-state message: '{line}'")
+
                 else:
                     print("📴 No Serial data available, waiting...")  # Debug: Confirm no data
             except Exception as e:
@@ -182,12 +189,30 @@ def simulate_auv_movement():
                 print("✅ Plastic collection complete!")
 
             elif last_state == 'w':
-                # ✅ State 'w': Wait Before Resuming
-                print(f"⏳ AUV is waiting for {WAIT_DURATION} seconds (fishes detected)...")
+                # Fish detected → WAIT first, then collect plastic
+                print(f"🐟 Fish detected → waiting {WAIT_DURATION} seconds before collecting plastic...")
+                
+                # Wait but DO NOT move
                 for _ in range(WAIT_DURATION):
                     socketio.emit("auv_update", auv_state)
                     socketio.sleep(1)
-                print("✅ Wait complete, resuming movement...")
+
+                # After waiting → collect plastic
+                print("🟡 Collecting plastic after fish moved away...")
+                auv_state["plastic_collection"] = True
+                socketio.emit("auv_update", auv_state)
+
+                # Battery drains more during collection
+                for _ in range(7):
+                    auv_state["battery"] = max(0, auv_state["battery"] - 0.2)
+                    socketio.emit("auv_update", auv_state)
+                    socketio.sleep(1)
+
+                # Reset after collection
+                auv_state["plastic_collection"] = False
+                auv_state["plastic_detected"] = False
+                print("✅ Plastic collection complete after waiting!")
+
 
             elif last_state == 'n':
                 # ✅ State 'n': Move On Without Collection
@@ -205,22 +230,28 @@ def simulate_auv_movement():
         # ✅ Use socketio.sleep(1) instead of eventlet.sleep()
         socketio.sleep(1)
 
-# ✅ Simulate AUV Health Degradation (Sensors degrade faster)
-for component in auv_state["health_status"]:
-    if component == "sensors":
-        decay = random.uniform(0.5, 1.5)  # 🚀 Sensors degrade 5x-10x faster
-    else:
-        decay = random.uniform(0.05, 0.2)  # Normal decay for other components
+def degrade_health():
+    while True:
+        # ✅ Simulate AUV Health Degradation (Sensors degrade faster)
+        for component in auv_state["health_status"]:
+            if component == "sensors":
+                decay = random.uniform(0.5, 1.5)  # 🚀 Sensors degrade 5x-10x faster
+            else:
+                decay = random.uniform(0.05, 0.2)  # Normal decay for other components
 
-    auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - decay)
+            auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - decay)
 
-    # Occasionally drop by a bigger value (5% - 10%) for sensors
-    if component == "sensors" and random.random() < 0.1:
-        auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - random.uniform(5, 10))
+            # Occasionally drop by a bigger value (5% - 10%) for sensors
+            if component == "sensors" and random.random() < 0.1:
+                auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - random.uniform(5, 10))
 
-    # Occasionally drop by a bigger value (2% - 5%) for other components
-    elif random.random() < 0.05:
-        auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - random.uniform(2, 5))
+            # Occasionally drop by a bigger value (2% - 5%) for other components
+            elif random.random() < 0.05:
+                auv_state["health_status"][component] = max(0, auv_state["health_status"][component] - random.uniform(2, 5))
+        socketio.emit("auv_update", auv_state)
+        socketio.sleep(5)
+
+socketio.start_background_task(degrade_health)
 
 # ✅ Convert Health Values to Labels
 health_labels = {}
@@ -249,4 +280,4 @@ if __name__ == "__main__":
     socketio.start_background_task(simulate_auv_movement)  
 
     # ✅ Start Flask WebSocket Server
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=False)

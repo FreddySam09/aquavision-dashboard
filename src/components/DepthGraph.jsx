@@ -1,3 +1,4 @@
+// components/DepthGraph.jsx
 import { Line } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
 import { useEffect, useState } from "react";

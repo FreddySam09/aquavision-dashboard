@@ -1,3 +1,4 @@
+// components/Metrics.jsx
 import { Box, Typography, LinearProgress } from "@mui/material";
 
 const Metrics = ({ auvData }) => {

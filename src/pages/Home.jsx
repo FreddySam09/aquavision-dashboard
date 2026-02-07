@@ -1,3 +1,4 @@
+//pages/Home.jsx
 import { Box, Typography, Button, Grid } from "@mui/material";
 import { Link } from "react-router-dom";
 
@@ -29,13 +30,25 @@ const Home = () => {
           Explore the future of underwater robotics with our AUV system designed for environmental monitoring and ocean exploration.
         </Typography>
         <Button
-          component={Link}
-          to="/dashboard"
-          variant="contained"
-          sx={{ mt: 3, bgcolor: "#fff", color: "#121212", fontWeight: 600, mb: 3 }}
+        component={Link}
+        to="/login"
+        variant="contained"
+        size="large"
+        sx={{mt: 3, bgcolor: "#fff", color: "#121212", fontWeight: 600, mb: 3}}
         >
-          Go to Dashboard
+          Login to Dashboard
         </Button>
+
+        <Button
+          component={Link}
+          to="/signup"
+          variant="outlined"
+          size="large"
+          sx={{ mt: 3, color: "#ffffff", fontWeight: 600, mb: 3, ml: 2, borderBlockColor: "#ffffff" }}
+        >
+          Create Account
+        </Button>
+
       </Box>
 
       <img

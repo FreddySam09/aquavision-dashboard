@@ -1,9 +1,9 @@
+//pages/Dashboard.jsx
 import { Box, Typography, Paper, Grid, Button } from "@mui/material";
 import RadarChart from "../components/RadarChart";
 import BatteryGraph from "../components/BatteryGraph";
 import DepthGraph from "../components/DepthGraph";
-import PlasticDetectionGraph from "../components/PlasticDetectionGraph";                              m,.\
-
+import PlasticDetectionGraph from "../components/PlasticDetectionGraph";
 import AuvHealthGraph from "../components/AuvHealthGraph";
 import WebSocketClient from "../components/WebSocketClient";
 import { useState } from "react";
