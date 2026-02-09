@@ -8,7 +8,7 @@ import AuvHealthGraph from "../components/AuvHealthGraph";
 import WebSocketClient from "../components/WebSocketClient";
 import { useState } from "react";
 
-const Dashboard = () => {
+const Dashboard = ({setConnected}) => {
   const [auvData, setAuvData] = useState({
     battery: 100,
     speed: 0.1,
@@ -25,6 +25,11 @@ const Dashboard = () => {
       thrusters: "critical",
     },
   });
+
+  const isConnected =
+  localStorage.getItem("auv_connected") === "true";
+
+
 
   // Determine the plastic collection status based on Flask server state
   const getPlasticStatus = () => {
@@ -60,15 +65,49 @@ const Dashboard = () => {
         <img src="/logo.png" alt="AUV Logo" style={{ height: "100px" }} />
       </Box>
 
-      {/* 🔵 Full-width PlayCanvas Simulation */}
-      <Paper sx={{ p: 2, bgcolor: "#1E1E1E", width: "1395px", mb: 2, height: "900px" }}>
-        <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>Live Simulation</Typography>
-        <iframe
-          src="/playcanvas/auv-sim3/index.html"
-          title="PlayCanvas Simulation"
-          style={{ width: "100%", height: "550px", border: "none" }}
-        />
-      </Paper>
+      {/* Simulation or Inactive State */}
+      {isConnected ? (
+        <Paper
+          sx={{
+            p: 2,
+            bgcolor: "#1E1E1E",
+            width: "1395px",
+            mb: 2,
+            height: "900px",
+          }}
+        >
+          <Typography variant="body1" sx={{ fontWeight: 600, mb: 1 }}>
+            Live Simulation
+          </Typography>
+          <iframe
+            src="/playcanvas/auv-sim3/index.html"
+            title="PlayCanvas Simulation"
+            style={{ width: "100%", height: "550px", border: "none" }}
+          />
+        </Paper>
+      ) : (
+        <Paper
+          sx={{
+            p: 4,
+            bgcolor: "#1E1E1E",
+            width: "1395px",
+            mb: 2,
+            height: "300px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <Typography variant="h6" color="error" sx={{ mb: 1 }}>
+            AUV Inactive
+          </Typography>
+          <Typography variant="body2" color="gray">
+            No telemetry data received from server
+          </Typography>
+        </Paper>
+      )}
+
 
       {/* 🔵 Grid Layout for Radar + Position */}
       <Grid container spacing={2} sx={{ width: "1440px", mb: 2 }}>
@@ -173,7 +212,11 @@ const Dashboard = () => {
       </Box>
 
       {/* WebSocket */}
-      <WebSocketClient onDataReceived={setAuvData} />
+      <WebSocketClient
+  onDataReceived={setAuvData}
+  onConnectionChange={setConnected}
+/>
+
     </Box>
   );
 };

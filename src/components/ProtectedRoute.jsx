@@ -4,7 +4,18 @@ import { useAuth } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+  const serverIP = localStorage.getItem("server_ip");
+
+if (!user) {
+  return <Navigate to="/login" />;
+}
+
+if (!serverIP) {
+  return <Navigate to="/connect" />;
+}
+
+return children;
+
 };
 
 export default ProtectedRoute;

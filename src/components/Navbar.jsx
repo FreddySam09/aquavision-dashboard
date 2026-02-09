@@ -1,4 +1,3 @@
-//components/Navbar.jsx
 import {
   AppBar,
   Toolbar,
@@ -37,8 +36,12 @@ const activeStyle = {
   },
 };
 
-const Navbar = () => {
+const Navbar = ({ connected }) => {
   const { logout, user } = useAuth();
+  const storedConnection =
+    localStorage.getItem("auv_connected") === "true";
+
+  const isConnected = connected || storedConnection;
 
   return (
     <AppBar
@@ -51,7 +54,7 @@ const Navbar = () => {
       }}
     >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-        {/* LEFT: BRAND */}
+        {/* LEFT: BRAND + NAV */}
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography
             variant="h6"
@@ -73,65 +76,96 @@ const Navbar = () => {
             Home
           </Button>
 
-          <Button
-            component={NavLink}
-            to="/dashboard"
-            sx={navItemStyle}
-            style={({ isActive }) => (isActive ? activeStyle : {})}
-          >
-            Dashboard
-          </Button>
+          {user && (
+            <>
+              <Button
+                component={NavLink}
+                to="/dashboard"
+                sx={navItemStyle}
+                style={({ isActive }) => (isActive ? activeStyle : {})}
+              >
+                Dashboard
+              </Button>
 
-          <Button
-            component={NavLink}
-            to="/services"
-            sx={navItemStyle}
-            style={({ isActive }) => (isActive ? activeStyle : {})}
-          >
-            Services
-          </Button>
+              <Button
+                component={NavLink}
+                to="/services"
+                sx={navItemStyle}
+                style={({ isActive }) => (isActive ? activeStyle : {})}
+              >
+                Services
+              </Button>
 
-          <Button
-            component={NavLink}
-            to="/settings"
-            sx={navItemStyle}
-            style={({ isActive }) => (isActive ? activeStyle : {})}
-          >
-            Settings
-          </Button>
+              <Button
+                component={NavLink}
+                to="/settings"
+                sx={navItemStyle}
+                style={({ isActive }) => (isActive ? activeStyle : {})}
+              >
+                Settings
+              </Button>
+            </>
+          )}
         </Box>
 
-        {/* RIGHT: STATUS + USER */}
+        {/* RIGHT SIDE */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Chip
-            label="AUV • Connected"
-            size="small"
-            sx={{
-              backgroundColor: "rgba(76,175,80,0.15)",
-              color: "#81c784",
-              fontWeight: 500,
-            }}
-          />
+          {user ? (
+            <>
+              <Chip
+                label={
+                  isConnected ? "AUV • Connected" : "AUV • Inactive"
+                }
+                size="small"
+                sx={{
+                  backgroundColor: isConnected
+                    ? "rgba(76,175,80,0.15)"
+                    : "rgba(244,67,54,0.15)",
+                  color: isConnected ? "#81c784" : "#ef5350",
+                  fontWeight: 500,
+                }}
+              />
 
-          <Typography variant="body2" color="gray">
-            {user?.role?.toUpperCase()}
-          </Typography>
+              <Typography variant="body2" color="gray">
+                {user?.role?.toUpperCase()}
+              </Typography>
 
-          <Button
-            size="small"
-            variant="outlined"
-            color="inherit"
-            onClick={logout}
-            sx={{
-              borderColor: "rgba(255,255,255,0.2)",
-              "&:hover": {
-                borderColor: "#f44336",
-                color: "#f44336",
-              },
-            }}
-          >
-            Logout
-          </Button>
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                onClick={logout}
+                sx={{
+                  borderColor: "rgba(255,255,255,0.2)",
+                  "&:hover": {
+                    borderColor: "#f44336",
+                    color: "#f44336",
+                  },
+                }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                component={NavLink}
+                to="/login"
+                variant="outlined"
+                color="inherit"
+              >
+                Login
+              </Button>
+
+              <Button
+                component={NavLink}
+                to="/signup"
+                variant="contained"
+              >
+                Sign Up
+              </Button>
+            </>
+          )}
         </Box>
       </Toolbar>
     </AppBar>

@@ -20,7 +20,14 @@ const Login = () => {
       username: "operator",
       role: "operator", // ← later comes from backend
     });
-    navigate("/pairing");
+    const serverIP = localStorage.getItem("server_ip");
+
+    if (!serverIP) {
+      navigate("/connect");
+    } else {
+      navigate("/dashboard");
+    }
+
   };
 
 
